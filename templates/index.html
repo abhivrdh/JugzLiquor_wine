@@ -33,6 +33,8 @@
     </div>
     <div class="hdr-r">
       <span class="hdr-clock" id="clock"></span>
+      {% if user_role == 'admin' %}<a href="/admin" style="color:var(--gold);text-decoration:none;font-size:11px;padding:4px 10px;border:1px solid rgba(200,151,42,.2);border-radius:6px;margin-right:6px">⚙ Admin</a>{% endif %}
+      <a href="/logout" style="color:var(--tx2);text-decoration:none;font-size:11px;padding:4px 10px;border:1px solid var(--bd);border-radius:6px;margin-right:6px">Logout</a>
       <span class="hdr-badge">21+</span>
     </div>
   </header>
@@ -202,6 +204,18 @@
   <div class="modal-sheet modal-lg"><button class="modal-x" onclick="closeRecipeModalBtn()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button><div id="recipeModalContent"></div></div>
 </div>
 
+<script>
+/* Session check — detect if kicked by another login */
+setInterval(async () => {
+  try {
+    const res = await fetch('/api/session-check');
+    if (res.status === 401) {
+      alert('Your session has expired — you may have logged in from another device.');
+      window.location.href = '/login';
+    }
+  } catch(e) {}
+}, 30000);
+</script>
 <script src="/static/js/avatar.js"></script>
 <script src="/static/js/app.js"></script>
 </body>
