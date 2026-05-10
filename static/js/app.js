@@ -8,13 +8,7 @@ let currentProduct = null, catalogMode = 'products', catFilter = '';
 let allProducts = [], allRecipes = [];
 let slideIndex = 0, slideTimer = null;
 
-const SYSTEM = `You are Alex, a warm and passionate AI liquor expert at a premium liquor store kiosk.
-Personality: Enthusiastic, knowledgeable, friendly bartender tone. Use phrases like "Oh great choice!", "I love this one!", "Pro tip:", "Fun fact:", "Between you and me…"
-Rules:
-- Keep responses SHORT — 2-4 natural spoken sentences.
-- Never mention prices or aisle locations.
-- Responses will be spoken aloud — no bullet points, no markdown, no symbols.
-- Be genuinely excited about great spirits and cocktails.`;
+const SYSTEM = ''; /* System prompt is now built server-side with real inventory data */
 
 /* ── Screen nav ── */
 function showScreen(id) {
@@ -278,7 +272,13 @@ function renderProducts(prods) {
   const g=document.getElementById('catalogGrid');
   if(!g)return;
   if(!prods.length){g.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:3rem;color:rgba(245,237,216,.4)">No products found.</div>';return;}
-  g.innerHTML=prods.map(p=>`<div class="pcard" onclick="showProduct(${p.id})"><div class="pc-icon">${p.icon}</div><div class="pc-name">${esc(p.name)}</div><div class="pc-desc">${esc(p.desc)}</div><div class="pc-tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div>`).join('');
+  g.innerHTML=prods.map(p=>{
+    let priceHtml = '';
+    if (p.sale_price) priceHtml = `<div class="pc-price"><span style="color:#4ade80;font-weight:600">$${Number(p.sale_price).toFixed(2)}</span> <span style="text-decoration:line-through;opacity:.5;font-size:11px">$${Number(p.price).toFixed(2)}</span></div>`;
+    else if (p.price) priceHtml = `<div class="pc-price" style="color:var(--gold-l);font-weight:500">$${Number(p.price).toFixed(2)}</div>`;
+    const stockHtml = p.in_stock===false ? '<span style="color:#ef4444;font-size:10px;margin-left:6px">OUT OF STOCK</span>' : '';
+    return `<div class="pcard" onclick="showProduct('${p.id}')"><div class="pc-icon">${p.icon}</div><div class="pc-name">${esc(p.name)}${stockHtml}</div>${priceHtml}<div class="pc-desc">${esc(p.desc)}</div><div class="pc-tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div></div>`;
+  }).join('');
 }
 function renderRecipes(recs) {
   const g=document.getElementById('catalogGrid');
@@ -298,8 +298,12 @@ function setCatFilter(cat,btn) {
 
 /* ── Modals ── */
 function showProduct(id) {
-  const p=allProducts.find(x=>x.id===id); if(!p)return; currentProduct=p;
-  document.getElementById('modalContent').innerHTML=`<div class="m-icon">${p.icon}</div><div class="m-name">${esc(p.name)}</div><div class="m-cat">${esc(p.category)}</div><div class="m-desc">${esc(p.desc)}</div><div class="m-tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`;
+  const p=allProducts.find(x=>String(x.id)===String(id)); if(!p)return; currentProduct=p;
+  let priceHtml = '';
+  if (p.sale_price) priceHtml = `<div style="margin:8px 0;font-size:18px"><span style="color:#4ade80;font-weight:700">$${Number(p.sale_price).toFixed(2)}</span> <span style="text-decoration:line-through;opacity:.4;font-size:14px">$${Number(p.price).toFixed(2)}</span> <span style="background:rgba(74,222,128,.15);color:#4ade80;padding:2px 8px;border-radius:4px;font-size:11px">SALE</span></div>`;
+  else if (p.price) priceHtml = `<div style="margin:8px 0;font-size:18px;color:var(--gold-l);font-weight:600">$${Number(p.price).toFixed(2)}</div>`;
+  const details = [p.brand, p.size, p.abv ? p.abv+'% ABV' : ''].filter(Boolean).join(' · ');
+  document.getElementById('modalContent').innerHTML=`<div class="m-icon">${p.icon}</div><div class="m-name">${esc(p.name)}</div><div class="m-cat">${esc(p.category)}${details ? ' · '+esc(details) : ''}</div>${priceHtml}<div class="m-desc">${esc(p.desc)}</div><div class="m-tags">${p.tags.map(t=>`<span class="tag">${esc(t)}</span>`).join('')}</div>`;
   document.getElementById('modal').classList.add('show');
 }
 function showRecipe(i) {

@@ -190,6 +190,10 @@ function _loop() {
   const dt = Math.min(_clk.getDelta(), 0.05);
   _av.t += dt; _av.breathT += dt; _av.blinkT += dt;
   if (_model && Object.keys(_bones).length > 0) _animate(dt);
+  /* Static model: gentle idle sway */
+  if (_model && Object.keys(_bones).length === 0) {
+    _model.rotation.y = Math.sin(_av.t * 0.3) * 0.06;
+  }
   _cam.position.x = Math.sin(_av.t * 0.18) * 0.04;
   _ren.render(_scene, _cam);
 }
